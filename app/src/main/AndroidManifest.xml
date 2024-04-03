@@ -16,11 +16,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LiveActivityPOC"
         tools:targetApi="31">
+
         <activity
             android:name=".MyFullScreenActivity"
             android:exported="false"
             android:label="@string/title_activity_my_full_screen"
-            android:theme="@style/Theme.LiveActivityPOC" />
+            android:showOnLockScreen="true"
+            android:theme="@style/Theme.Transparent"
+            android:turnScreenOn="true"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -49,6 +53,7 @@
             android:name=".WidgetRunningService"
             android:exported="false"
             android:foregroundServiceType="specialUse" />
+
         <service
             android:name=".ExampleService"
             android:exported="false"

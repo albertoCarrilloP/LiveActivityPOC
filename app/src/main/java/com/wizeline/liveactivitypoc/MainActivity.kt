@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
@@ -40,6 +41,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    private val screenStateReceiver = ScreenStateReceiver()
+
     private val pushNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
@@ -59,6 +63,7 @@ class MainActivity : ComponentActivity() {
                         onCustomNotificationClicked = { runCustomNotifications() },
                         onFullscreenNotificationClicked = { runFullscreenNotifications() },
                         onServiceClicked = { launchService() },
+                        onBroadcastClicked = { registerBroadcastReceiver() },
                     )
                 }
             }
@@ -66,6 +71,13 @@ class MainActivity : ComponentActivity() {
         createNotificationChannel()
         createHighPriorityNotificationChannel()
         addPostNotificationPermissions()
+    }
+
+    private fun registerBroadcastReceiver() {
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+        }
+        registerReceiver(screenStateReceiver, filter)
     }
 
     private fun launchService() {
@@ -235,6 +247,11 @@ class MainActivity : ComponentActivity() {
             NotificationManagerCompat.from(this).notify(1, notification)
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(screenStateReceiver)
+    }
 }
 
 @Composable
@@ -244,6 +261,7 @@ fun LiveActivityAttempts(
     onCustomNotificationClicked: () -> Unit,
     onFullscreenNotificationClicked: () -> Unit,
     onServiceClicked: () -> Unit,
+    onBroadcastClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -257,6 +275,7 @@ fun LiveActivityAttempts(
         ButtonWithPercent("Attempt 3 Custom Notification", onCustomNotificationClicked)
         ButtonWithPercent("Attempt 4 Fullscreen Notification", onFullscreenNotificationClicked)
         ButtonWithPercent("Attempt 5 Activity from service", onServiceClicked)
+        ButtonWithPercent("Attempt 6 Broadcast receiver", onBroadcastClicked)
         Spacer(Modifier.weight(1f))
     }
 }
@@ -286,6 +305,7 @@ fun GreetingPreview() {
             onCustomNotificationClicked = {},
             onFullscreenNotificationClicked = {},
             onServiceClicked = {},
+            onBroadcastClicked = {},
         )
     }
 }
