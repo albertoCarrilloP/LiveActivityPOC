@@ -7,8 +7,10 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.widget.RemoteViews
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -52,7 +54,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     LiveActivityAttempts(
                         onWidgetClicked = { startWidgetRunningService() },
-                        onPersistentNotificationClicked = { runPersistentNotifications() }
+                        onPersistentNotificationClicked = { runPersistentNotifications() },
+                        onCustomNotificationClicked = { runCustomNotifications() }
                     )
                 }
             }
@@ -72,6 +75,54 @@ class MainActivity : ComponentActivity() {
                 time += 1
                 if (time == 30) cancel()
             }
+        }
+    }
+
+    private fun runCustomNotifications() {
+        lifecycleScope.launch {
+            var distance = 0
+            var time = 0
+            while (true) {
+                createCustomNotification(distance, time)
+                delay(1000)
+                distance += 37
+                time += 1
+                if (time == 30) cancel()
+            }
+        }
+    }
+
+    private fun createCustomNotification(distance: Int, time: Int) {
+        val remoteViews = RemoteViews(packageName, R.layout.custom_running_notification).apply {
+            setInt(R.id.notification_background, "setBackgroundColor", Color.argb(180,186,145,255))
+            setProgressBar(R.id.progressBar, 30, time, false)
+            setTextViewText(
+                R.id.widget_distance_text,
+                getString(R.string.your_total_distance, distance)
+            )
+            setTextViewText(
+                R.id.widget_time_text,
+                getString(R.string.time_running, time.toString())
+            )
+        }
+
+        val notification = NotificationCompat.Builder(this, "CHANNEL_ID")
+            .setSmallIcon(R.drawable.ic_run)
+            .setOnlyAlertOnce(true)
+            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+            .setContentTitle("Your running app")
+            .setCustomBigContentView(remoteViews)
+            .setCustomContentView(remoteViews)
+            .build()
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            NotificationManagerCompat.from(this).notify(3, notification)
+        } else {
+            NotificationManagerCompat.from(this).notify(3, notification)
         }
     }
 
@@ -134,6 +185,7 @@ class MainActivity : ComponentActivity() {
 fun LiveActivityAttempts(
     onWidgetClicked: () -> Unit,
     onPersistentNotificationClicked: () -> Unit,
+    onCustomNotificationClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -142,15 +194,21 @@ fun LiveActivityAttempts(
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
         Spacer(Modifier.weight(1f))
-        Button80Percent("Attempt 1 Widget", onWidgetClicked)
-        Button80Percent("Attempt 2 Persistent Notification", onPersistentNotificationClicked)
+        ButtonWithPercent("Attempt 1 Widget", onWidgetClicked)
+        ButtonWithPercent("Attempt 2 Persistent Notification", onPersistentNotificationClicked)
+        ButtonWithPercent("Attempt 3 Custom Notification", onCustomNotificationClicked)
         Spacer(Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun Button80Percent(text: String, onWidgetClicked: () -> Unit) {
-    Button(modifier = Modifier.fillMaxWidth(.8f), onClick = { onWidgetClicked() }) {
+private fun ButtonWithPercent(
+    text: String,
+    onWidgetClicked: () -> Unit,
+    widthPercent: Float = .8f
+) {
+    Button(modifier = Modifier.fillMaxWidth(widthPercent),
+        onClick = { onWidgetClicked() }) {
         Text(
             text = text,
             fontSize = 16.sp
@@ -162,6 +220,9 @@ private fun Button80Percent(text: String, onWidgetClicked: () -> Unit) {
 @Composable
 fun GreetingPreview() {
     LiveActivityPOCTheme {
-        LiveActivityAttempts(onWidgetClicked = {}, onPersistentNotificationClicked = {})
+        LiveActivityAttempts(
+            onWidgetClicked = {},
+            onPersistentNotificationClicked = {},
+            onCustomNotificationClicked = {})
     }
 }
