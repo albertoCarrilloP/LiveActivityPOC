@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -55,13 +56,39 @@ class MainActivity : ComponentActivity() {
                     LiveActivityAttempts(
                         onWidgetClicked = { startWidgetRunningService() },
                         onPersistentNotificationClicked = { runPersistentNotifications() },
-                        onCustomNotificationClicked = { runCustomNotifications() }
+                        onCustomNotificationClicked = { runCustomNotifications() },
+                        onFullscreenNotificationClicked = { runFullscreenNotifications() },
                     )
                 }
             }
         }
         createNotificationChannel()
+        createHighPriorityNotificationChannel()
         addPostNotificationPermissions()
+    }
+
+    private fun runFullscreenNotifications() {
+        val intent = Intent(this, MyFullScreenActivity::class.java)
+        val fullScreenPendingIntent = PendingIntent.getActivity(
+            this, 0,
+            intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = NotificationCompat.Builder(this, "FullScreenChannel")
+            .setSmallIcon(R.drawable.ic_run)
+            .setContentTitle("Alerta Urgente")
+            .setContentText("Información importante.")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            NotificationManagerCompat.from(this).notify(4, builder.build())
+        } else {
+            NotificationManagerCompat.from(this).notify(4, builder.build())
+        }
     }
 
     private fun runPersistentNotifications() {
@@ -94,7 +121,11 @@ class MainActivity : ComponentActivity() {
 
     private fun createCustomNotification(distance: Int, time: Int) {
         val remoteViews = RemoteViews(packageName, R.layout.custom_running_notification).apply {
-            setInt(R.id.notification_background, "setBackgroundColor", Color.argb(180,186,145,255))
+            setInt(
+                R.id.notification_background,
+                "setBackgroundColor",
+                Color.argb(180, 186, 145, 255)
+            )
             setProgressBar(R.id.progressBar, 30, time, false)
             setTextViewText(
                 R.id.widget_distance_text,
@@ -158,6 +189,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun createHighPriorityNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Running info important"
+            val descriptionText = "full screen chanel"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel("FullScreenChannel", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
     private fun createPersistentNotification(distance: Int, time: Int) {
         val notificationBuilder = NotificationCompat.Builder(this, "CHANNEL_ID")
             .setOngoing(true)
@@ -186,6 +231,7 @@ fun LiveActivityAttempts(
     onWidgetClicked: () -> Unit,
     onPersistentNotificationClicked: () -> Unit,
     onCustomNotificationClicked: () -> Unit,
+    onFullscreenNotificationClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -197,6 +243,7 @@ fun LiveActivityAttempts(
         ButtonWithPercent("Attempt 1 Widget", onWidgetClicked)
         ButtonWithPercent("Attempt 2 Persistent Notification", onPersistentNotificationClicked)
         ButtonWithPercent("Attempt 3 Custom Notification", onCustomNotificationClicked)
+        ButtonWithPercent("Attempt 4 Fullscreen Notification", onFullscreenNotificationClicked)
         Spacer(Modifier.weight(1f))
     }
 }
@@ -223,6 +270,7 @@ fun GreetingPreview() {
         LiveActivityAttempts(
             onWidgetClicked = {},
             onPersistentNotificationClicked = {},
-            onCustomNotificationClicked = {})
+            onCustomNotificationClicked = {},
+            onFullscreenNotificationClicked = {})
     }
 }

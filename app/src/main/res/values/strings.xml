@@ -3,4 +3,5 @@
     <string name="your_running_app">Your running App</string>
     <string name="your_total_distance">Your total distance %d m</string>
     <string name="time_running">Time running %ss</string>
+    <string name="title_activity_my_full_screen">MyFullScreenActivity</string>
 </resources>
