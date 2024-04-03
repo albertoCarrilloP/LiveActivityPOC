@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity() {
                         onPersistentNotificationClicked = { runPersistentNotifications() },
                         onCustomNotificationClicked = { runCustomNotifications() },
                         onFullscreenNotificationClicked = { runFullscreenNotifications() },
+                        onServiceClicked = { launchService() },
                     )
                 }
             }
@@ -65,6 +66,16 @@ class MainActivity : ComponentActivity() {
         createNotificationChannel()
         createHighPriorityNotificationChannel()
         addPostNotificationPermissions()
+    }
+
+    private fun launchService() {
+        val serviceIntent = Intent(this, ExampleService::class.java)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
     }
 
     private fun runFullscreenNotifications() {
@@ -232,6 +243,7 @@ fun LiveActivityAttempts(
     onPersistentNotificationClicked: () -> Unit,
     onCustomNotificationClicked: () -> Unit,
     onFullscreenNotificationClicked: () -> Unit,
+    onServiceClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -244,6 +256,7 @@ fun LiveActivityAttempts(
         ButtonWithPercent("Attempt 2 Persistent Notification", onPersistentNotificationClicked)
         ButtonWithPercent("Attempt 3 Custom Notification", onCustomNotificationClicked)
         ButtonWithPercent("Attempt 4 Fullscreen Notification", onFullscreenNotificationClicked)
+        ButtonWithPercent("Attempt 5 Activity from service", onServiceClicked)
         Spacer(Modifier.weight(1f))
     }
 }
@@ -271,6 +284,8 @@ fun GreetingPreview() {
             onWidgetClicked = {},
             onPersistentNotificationClicked = {},
             onCustomNotificationClicked = {},
-            onFullscreenNotificationClicked = {})
+            onFullscreenNotificationClicked = {},
+            onServiceClicked = {},
+        )
     }
 }

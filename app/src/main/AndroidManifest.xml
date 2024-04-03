@@ -49,6 +49,10 @@
             android:name=".WidgetRunningService"
             android:exported="false"
             android:foregroundServiceType="specialUse" />
+        <service
+            android:name=".ExampleService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
     </application>
 
 </manifest>
