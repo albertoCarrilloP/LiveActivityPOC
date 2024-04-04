@@ -35,6 +35,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wizeline.liveactivitypoc.ui.theme.LiveActivityPOCTheme
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val viewModel: RecordRideNotificationViewModel = viewModel()
             LiveActivityPOCTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -64,6 +66,10 @@ class MainActivity : ComponentActivity() {
                         onFullscreenNotificationClicked = { runFullscreenNotifications() },
                         onServiceClicked = { launchService() },
                         onBroadcastClicked = { registerBroadcastReceiver() },
+                        onFinalAttemptClicked = {
+                            viewModel.startRide("Glorieta la Minerva", 50.5f)
+                            launchService()
+                        },
                     )
                 }
             }
@@ -247,11 +253,6 @@ class MainActivity : ComponentActivity() {
             NotificationManagerCompat.from(this).notify(1, notification)
         }
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        unregisterReceiver(screenStateReceiver)
-    }
 }
 
 @Composable
@@ -262,6 +263,7 @@ fun LiveActivityAttempts(
     onFullscreenNotificationClicked: () -> Unit,
     onServiceClicked: () -> Unit,
     onBroadcastClicked: () -> Unit,
+    onFinalAttemptClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -276,6 +278,7 @@ fun LiveActivityAttempts(
         ButtonWithPercent("Attempt 4 Fullscreen Notification", onFullscreenNotificationClicked)
         ButtonWithPercent("Attempt 5 Activity from service", onServiceClicked)
         ButtonWithPercent("Attempt 6 Broadcast receiver", onBroadcastClicked)
+        ButtonWithPercent("Final Attempt", onFinalAttemptClicked)
         Spacer(Modifier.weight(1f))
     }
 }
@@ -306,6 +309,7 @@ fun GreetingPreview() {
             onFullscreenNotificationClicked = {},
             onServiceClicked = {},
             onBroadcastClicked = {},
+            onFinalAttemptClicked = {},
         )
     }
 }
